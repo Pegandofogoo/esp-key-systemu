@@ -1,513 +1,1055 @@
---[=[
- .d88888b.                             d8b 
-d88P" "Y88b                            Y8P 
-888     888                                      
-888     888    888  888    888  888    888 
-888     888    888  888    `Y8bd8P'    888 
-888     888    888  888      X88K      888 
-Y88b. .d88P    Y88b 888    .d8""8b.    888 
- "Y88888P"      "Y88888    888  888    888  [v1]
-]=]
+--====================================================
+-- ESP DEBUG - PRÓPRIO JOGO
+-- LocalScript
+-- StarterPlayer > StarterPlayerScripts
+--====================================================
 
--- Instances: 29 | Scripts: 2 | Modules: 0
-local G2L = {};
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
 
--- StarterGui.Ouxi
-G2L["1"] = Instance.new("ScreenGui", game.CoreGui);
-G2L["1"]["IgnoreGuiInset"] = true;
-G2L["1"]["AutoLocalize"] = false;
-G2L["1"]["ScreenInsets"] = Enum.ScreenInsets.DeviceSafeInsets;
-G2L["1"]["Name"] = [[Ouxi]];
-G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
-G2L["1"]["ResetOnSpawn"] = false;
+local player = Players.LocalPlayer
+local debrisFolder = workspace:WaitForChild("Debris")
 
--- StarterGui.Ouxi.UI
-G2L["2"] = Instance.new("Frame", G2L["1"]);
-G2L["2"]["ZIndex"] = 999999999;
-G2L["2"]["BorderSizePixel"] = 0;
-G2L["2"]["BackgroundColor3"] = Color3.fromRGB(25, 25, 25);
-G2L["2"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["2"]["Size"] = UDim2.new(0, 304, 0, 275);
-G2L["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["2"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-G2L["2"]["Name"] = [[UI]];
+--====================================================
+-- CONFIG
+--====================================================
 
--- StarterGui.Ouxi.UI.UICorner
-G2L["3"] = Instance.new("UICorner", G2L["2"]);
-G2L["3"]["CornerRadius"] = UDim.new(0, 4);
+local MAX_DISTANCE = 400
 
--- StarterGui.Ouxi.UI.Header
-G2L["4"] = Instance.new("Frame", G2L["2"]);
-G2L["4"]["ZIndex"] = 999999999;
-G2L["4"]["BorderSizePixel"] = 0;
-G2L["4"]["BackgroundColor3"] = Color3.fromRGB(20, 20, 20);
-G2L["4"]["AnchorPoint"] = Vector2.new(0.5, 0);
-G2L["4"]["Size"] = UDim2.new(0.9900000095367432, 0, 0, 32);
-G2L["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["4"]["Position"] = UDim2.new(0.5, 0, 0, 0);
-G2L["4"]["Name"] = [[Header]];
+local settings = {
+	Enemy = false,
+	Item = false,
+	Trap = false,
+	Fullbright = false
+}
 
--- StarterGui.Ouxi.UI.Header.NName
-G2L["5"] = Instance.new("TextLabel", G2L["4"]);
-G2L["5"]["ZIndex"] = 999999999;
-G2L["5"]["BorderSizePixel"] = 0;
-G2L["5"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["5"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["5"]["TextSize"] = 14;
-G2L["5"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["5"]["Size"] = UDim2.new(0, 207, 0, 32);
-G2L["5"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["5"]["Text"] = [[OuxiHub | Elemental Powers]];
-G2L["5"]["Name"] = [[NName]];
-G2L["5"]["BackgroundTransparency"] = 1;
+local tracked = {}
 
--- StarterGui.Ouxi.UI.Header.UICorner
-G2L["6"] = Instance.new("UICorner", G2L["4"]);
-G2L["6"]["CornerRadius"] = UDim.new(0, 4);
+--====================================================
+-- SALVAR LIGHTING ORIGINAL
+--====================================================
 
--- StarterGui.Ouxi.UI.Header.Frame
-G2L["7"] = Instance.new("Frame", G2L["4"]);
-G2L["7"]["BorderSizePixel"] = 0;
-G2L["7"]["BackgroundColor3"] = Color3.fromRGB(20, 20, 20);
-G2L["7"]["Size"] = UDim2.new(1, 0, 0.34375, 0);
-G2L["7"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["7"]["Position"] = UDim2.new(0, 0, 0.65625, 0);
+local originalLighting = {
+	Brightness = Lighting.Brightness,
+	ClockTime = Lighting.ClockTime,
+	FogStart = Lighting.FogStart,
+	FogEnd = Lighting.FogEnd,
+	GlobalShadows = Lighting.GlobalShadows,
+	Ambient = Lighting.Ambient,
+	OutdoorAmbient = Lighting.OutdoorAmbient
+}
 
--- StarterGui.Ouxi.UI.Powers
-G2L["8"] = Instance.new("ScrollingFrame", G2L["2"]);
-G2L["8"]["Active"] = true;
-G2L["8"]["ZIndex"] = 999999999;
-G2L["8"]["BorderSizePixel"] = 0;
-G2L["8"]["BackgroundColor3"] = Color3.fromRGB(20, 20, 20);
-G2L["8"]["AnchorPoint"] = Vector2.new(0.5, 0);
-G2L["8"]["AutomaticCanvasSize"] = Enum.AutomaticSize.Y;
-G2L["8"]["Size"] = UDim2.new(0, 285, 0, 210);
-G2L["8"]["ScrollBarImageColor3"] = Color3.fromRGB(57, 57, 57);
-G2L["8"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["8"]["ScrollBarThickness"] = 5;
-G2L["8"]["Position"] = UDim2.new(0.5, 0, 0.1850000023841858, 0);
-G2L["8"]["Name"] = [[Powers]];
+--====================================================
+-- SALVAR ATMOSPHERE ORIGINAL
+--====================================================
 
--- StarterGui.Ouxi.UI.Powers.UIListLayout
-G2L["9"] = Instance.new("UIListLayout", G2L["8"]);
-G2L["9"]["Padding"] = UDim.new(0, 7);
-G2L["9"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
+local atmosphereSettings = {}
 
--- StarterGui.Ouxi.UI.Powers.UIPadding
-G2L["a"] = Instance.new("UIPadding", G2L["8"]);
-G2L["a"]["PaddingTop"] = UDim.new(0, 7);
-G2L["a"]["PaddingLeft"] = UDim.new(0, 7);
+local function saveAtmosphere(atmosphere)
 
--- StarterGui.Ouxi.UI.Powers.Type
-G2L["b"] = Instance.new("Frame", G2L["8"]);
-G2L["b"]["ZIndex"] = 999999999;
-G2L["b"]["BorderSizePixel"] = 0;
-G2L["b"]["BackgroundColor3"] = Color3.fromRGB(15, 15, 15);
-G2L["b"]["Size"] = UDim2.new(0, 264, 0, 26);
-G2L["b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["b"]["Name"] = [[Type]];
+	if atmosphereSettings[atmosphere] then
+		return
+	end
 
--- StarterGui.Ouxi.UI.Powers.Type.UICorner
-G2L["c"] = Instance.new("UICorner", G2L["b"]);
-G2L["c"]["CornerRadius"] = UDim.new(0, 4);
-
--- StarterGui.Ouxi.UI.Powers.Type.TextLabel
-G2L["d"] = Instance.new("TextLabel", G2L["b"]);
-G2L["d"]["ZIndex"] = 999999999;
-G2L["d"]["BorderSizePixel"] = 0;
-G2L["d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["d"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["d"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["d"]["TextSize"] = 12;
-G2L["d"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["d"]["Size"] = UDim2.new(1, 0, 1, 0);
-G2L["d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["d"]["Text"] = [[Type ▼]];
-G2L["d"]["BackgroundTransparency"] = 1;
-
--- StarterGui.Ouxi.UI.Powers.Type.TextLabel.UIPadding
-G2L["e"] = Instance.new("UIPadding", G2L["d"]);
-G2L["e"]["PaddingLeft"] = UDim.new(0, 7);
-
--- StarterGui.Ouxi.UI.Powers.Type.UIStroke
-G2L["f"] = Instance.new("UIStroke", G2L["b"]);
-G2L["f"]["Color"] = Color3.fromRGB(44, 44, 44);
-
--- StarterGui.Ouxi.UI.Powers.Power
-G2L["10"] = Instance.new("Frame", G2L["8"]);
-G2L["10"]["ZIndex"] = 999999999;
-G2L["10"]["BorderSizePixel"] = 0;
-G2L["10"]["BackgroundColor3"] = Color3.fromRGB(17, 17, 17);
-G2L["10"]["Size"] = UDim2.new(0, 264, 0, 26);
-G2L["10"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["10"]["Name"] = [[Power]];
-
--- StarterGui.Ouxi.UI.Powers.Power.UICorner
-G2L["11"] = Instance.new("UICorner", G2L["10"]);
-G2L["11"]["CornerRadius"] = UDim.new(0, 4);
-
--- StarterGui.Ouxi.UI.Powers.Power.Button
-G2L["12"] = Instance.new("ImageButton", G2L["10"]);
-G2L["12"]["ZIndex"] = 999999999;
-G2L["12"]["BorderSizePixel"] = 0;
-G2L["12"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["12"]["Size"] = UDim2.new(1, 0, 1, 0);
-G2L["12"]["Name"] = [[Button]];
-G2L["12"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["12"]["BackgroundTransparency"] = 1;
-
--- StarterGui.Ouxi.UI.Powers.Power.TextLabel
-G2L["13"] = Instance.new("TextLabel", G2L["10"]);
-G2L["13"]["ZIndex"] = 999999999;
-G2L["13"]["BorderSizePixel"] = 0;
-G2L["13"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["13"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["13"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["13"]["TextSize"] = 12;
-G2L["13"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["13"]["Size"] = UDim2.new(1, 0, 1, 0);
-G2L["13"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["13"]["Text"] = [[Power]];
-G2L["13"]["BackgroundTransparency"] = 1;
-
--- StarterGui.Ouxi.UI.Powers.Power.TextLabel.UIPadding
-G2L["14"] = Instance.new("UIPadding", G2L["13"]);
-G2L["14"]["PaddingLeft"] = UDim.new(0, 40);
-
--- StarterGui.Ouxi.UI.Powers.Power.UIStroke
-G2L["15"] = Instance.new("UIStroke", G2L["10"]);
-G2L["15"]["Color"] = Color3.fromRGB(44, 44, 44);
-
--- StarterGui.Ouxi.UI.Header
-G2L["16"] = Instance.new("TextLabel", G2L["2"]);
-G2L["16"]["ZIndex"] = 999999999;
-G2L["16"]["BorderSizePixel"] = 0;
-G2L["16"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["16"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["16"]["FontFace"] = Font.new([[rbxasset://fonts/families/GothamSSm.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["16"]["TextSize"] = 10;
-G2L["16"]["TextColor3"] = Color3.fromRGB(201, 201, 201);
-G2L["16"]["Size"] = UDim2.new(0, 52, 0, 18);
-G2L["16"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["16"]["Text"] = [[Powers :]];
-G2L["16"]["Name"] = [[Header]];
-G2L["16"]["BackgroundTransparency"] = 1;
-G2L["16"]["Position"] = UDim2.new(0.032894738018512726, 0, 0.11636363714933395, 0);
-
--- StarterGui.Ouxi.UI.Handler
-G2L["17"] = Instance.new("LocalScript", G2L["2"]);
-G2L["17"]["Name"] = [[Handler]];
-
--- StarterGui.Ouxi.UI.Dragify
-G2L["18"] = Instance.new("LocalScript", G2L["2"]);
-G2L["18"]["Name"] = [[Dragify]];
-
--- StarterGui.Ouxi.UI.Close
-G2L["19"] = Instance.new("Frame", G2L["2"]);
-G2L["19"]["ZIndex"] = 999999999;
-G2L["19"]["BorderSizePixel"] = 0;
-G2L["19"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["19"]["BackgroundTransparency"] = 1;
-G2L["19"]["Size"] = UDim2.new(0, 32, 0, 32);
-G2L["19"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["19"]["Position"] = UDim2.new(0.8930920958518982, 0, 0, 0);
-G2L["19"]["Name"] = [[Close]];
-
--- StarterGui.Ouxi.UI.Close.ImageButton
-G2L["1a"] = Instance.new("ImageButton", G2L["19"]);
-G2L["1a"]["ZIndex"] = 999999999;
-G2L["1a"]["BorderSizePixel"] = 0;
-G2L["1a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["1a"]["Size"] = UDim2.new(1, 0, 1, 0);
-G2L["1a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["1a"]["BackgroundTransparency"] = 1;
-
--- StarterGui.Ouxi.UI.Close.ImageLabel
-G2L["1b"] = Instance.new("ImageLabel", G2L["19"]);
-G2L["1b"]["ZIndex"] = 999999999;
-G2L["1b"]["BorderSizePixel"] = 0;
-G2L["1b"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["1b"]["ImageColor3"] = Color3.fromRGB(255, 0, 0);
-G2L["1b"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["1b"]["Image"] = [[rbxassetid://7072720961]];
-G2L["1b"]["Size"] = UDim2.new(0.5, 0, 0.5, 0);
-G2L["1b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["1b"]["BackgroundTransparency"] = 1;
-G2L["1b"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-
--- StarterGui.Ouxi.UI.DropShadow
-G2L["1c"] = Instance.new("ImageLabel", G2L["2"]);
-G2L["1c"]["ZIndex"] = 0;
-G2L["1c"]["BorderSizePixel"] = 0;
-G2L["1c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["1c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["1c"]["Image"] = [[rbxassetid://297694300]];
-G2L["1c"]["Size"] = UDim2.new(1.2441110610961914, 0, 1.2205359935760498, 0);
-G2L["1c"]["Name"] = [[DropShadow]];
-G2L["1c"]["BackgroundTransparency"] = 1;
-G2L["1c"]["Position"] = UDim2.new(0.5067567229270935, 0, 0.5024591684341431, 0);
-
--- StarterGui.Ouxi.UI.DropShadow
-G2L["1d"] = Instance.new("ImageLabel", G2L["2"]);
-G2L["1d"]["ZIndex"] = 0;
-G2L["1d"]["BorderSizePixel"] = 0;
-G2L["1d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["1d"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["1d"]["Image"] = [[rbxassetid://297694300]];
-G2L["1d"]["Size"] = UDim2.new(1.2441110610961914, 0, 1.2205359935760498, 0);
-G2L["1d"]["Name"] = [[DropShadow]];
-G2L["1d"]["BackgroundTransparency"] = 1;
-G2L["1d"]["Position"] = UDim2.new(0.5067567229270935, 0, 0.5024591684341431, 0);
-
--- StarterGui.Ouxi.UI.Handler
-local function C_17()
-local script = G2L["17"];
-
-	local powers = {
-		["Lava"] = {
-			[1] = "Lava Katana",
-			[2] = "Lava Ball",
-			[3] = "Magam Fists",
-			[4] = "Lava Dash",
-			[5] = "Volcano Sentry",
-			[6] = "Magma Spikes",
-			[7] = "Nibiru"
-		},
-		["Bone"] = {
-			[1] = "Bone Scythe",
-			[2] = "Blaster",
-			[3] = "Bones Barrage",
-			[4] = "Flying Bone",
-			[5] = "Bone Surge",
-			[6] = "Twin Blasters",
-			[7] = "Judgement Blast"
-		},
-		["Darkness"] = {
-			[1] = "Shadow Sword",
-			[2] = "Unseen Hands",
-			[3] = "Unseen Barrage",
-			[4] = "Dark Duo",
-			[5] = "Abyss",
-			[6] = "Dark Hold",
-			[7] = "Dark Arc"
-		},
-		["Light"] = {
-			[1] = "Light Saber",
-			[2] = "Light Ball",
-			[3] = "Light Orbs",
-			[4] = "Blinding Light",
-			[5] = "Shooting Star",
-			[6] = "Light Speed",
-			[7] = "Light Beam"
-		},
-		["Nature"] = {
-			[1] = "Christmas Tree Sword",
-			[2] = "Plantoid",
-			[3] = "Spore Bombs",
-			[4] = "Nature's Blessing",
-			[5] = "Nuclear Spore",
-			[6] = "Pine Burst",
-			[7] = "Nature's Wrath"
-		},
-		["Ice"] = {
-			[1] = "Frost Staff",
-			[2] = "Frost Fire Ball",
-			[3] = "Ice Disk",
-			[4] = "Frost Fire Ball",
-			[5] = "Snow Ball",
-			[6] = "Ultracold Aura",
-			[7] = "Ice Spikes"
-		},
-		["Thunder"] = {
-			[1] = "Thunder Staff",
-			[2] = "Bolt",
-			[3] = "Barrage",
-			[4] = "Discharge",
-			[5] = "Flying Nimbus",
-			[6] = "Lighting Strike",
-			[7] = "Storm"
-		},
-		["Earth"] = {
-			[1] = "Tectonic Hamer",
-			[2] = "Stone Throw",
-			[3] = "Rocks Barrage",
-			[4] = "Large Boulder",
-			[5] = "Burrow",
-			[6] = "Stone Henge",
-			[7] = "Earth Spikes"
-		},
-		["Fire"] = {
-			[1] = "Fire Sword",
-			[2] = "Fire Ball",
-			[3] = "Fire Fly",
-			[4] = "Fire Bomb",
-			[5] = "Comet",
-			[6] = "Combust",
-			[7] = "Fire Shower"
-		},
-		["Technology"] = {
-			[1] = "Hyper Sword",
-			[2] = "Phonton Blast",
-			[3] = "Twin-Photon Blash",
-			[4] = "Tesla Turret",
-			[5] = "Orbital",
-			[6] = "Tesseract",
-			[7] = "Hyper Slash"
-		},
-		["Gravity"] = {
-			[1] = "Gravity Katana",
-			[2] = "Heavy Infliction",
-			[3] = "Tectonic Barrage",
-			[4] = "Gravity Orb",
-			[5] = "Tectonic Burst",
-			[6] = "Zero Gravity",
-			[7] = "Gravity Globe"
-		},
-		["Time"] = {
-			[1] = "Time Scepter",
-			[2] = "Temporal Gate",
-			[3] = "Warp Barrage",
-			[4] = "Tempo Beam",
-			[5] = "Time Trap",
-			[6] = "Warp Bomb",
-			[7] = "Grand Clock"
-		},
-		["Crystal"] = {
-			[1] = "Crystal Cleaver",
-			[2] = "Crystal Mine",
-			[3] = "Energy Crash",
-			[4] = "Energy Crown",
-			[5] = "Crystal Eruption",
-			[6] = "Energy Crystal",
-			[7] = "Crystal Surge"
-		},
-		["Venom"] = {
-			[1] = "Venom Blade",
-			[2] = "Poison Bullet",
-			[3] = "Acid Rain",
-			[4] = "Venom Stream",
-			[5] = "Hardened Venom",
-			[6] = "Poison Demon",
-			[7] = "Bubbling Venom"
-		},
-		["Devil"] = {
-			[1] = "Devil Sword",
-			[2] = "Evil Bullet",
-			[3] = "Fangs Barrage",
-			[4] = "Evil Flash",
-			[5] = "Demon Orb",
-			[6] = "Demon Lock",
-			[7] = "Dark Tsunami"
-		},
-		["Space"] = {
-			[1] = "Space Gun",
-			[2] = "Blackhole Orb",
-			[3] = "Moon Splitter",
-			[4] = "Asteroid Belt",
-			[5] = "Meteor Jam",
-			[6] = "Cosmic Remote",
-			[7] = "Space Saucer"
-		}
+	atmosphereSettings[atmosphere] = {
+		Density = atmosphere.Density,
+		Offset = atmosphere.Offset,
+		Color = atmosphere.Color,
+		Decay = atmosphere.Decay,
+		Glare = atmosphere.Glare,
+		Haze = atmosphere.Haze
 	}
-	
-	local function addLabel(string)
-		local label = script.Parent.Powers.Type label.Visible = false
-		local new = label:Clone()
-		new.Visible = true
-		new.Name = string
-		new.TextLabel.Text = string.." ▼"
-		new.Parent = label.Parent
-	end
-	
-	local function addButton(string)
-		local btn = script.Parent.Powers.Power btn.Visible = false
-		local new = btn:Clone()
-		new.Visible = true
-		new.Name = string
-		new.TextLabel.Text = string
-		new.Parent = btn.Parent
-		
-		new.Button.MouseButton1Click:Connect(function()
-			if game.PlaceId == 10253248401 then
-				local args = {
-					[1] = "equip_mystery_spell",
-					[2] = string
-				}
-				game:GetService("ReplicatedStorage").RemoteEvent:FireServer(unpack(args))
-			else
-				print("Equiped", string)
-			end
-		end)
-	end
-	
-	for key,value in pairs(powers) do
-		addLabel(key)
-		for i,value2 in pairs(value) do
-			addButton(value2)
-		end
-	end
-	
-	script.Parent.Close.ImageButton.MouseButton1Click:Connect(function()
-		script.Parent.Parent:Destroy()
-		if script.Parent.Parent then
-			script.Parent.Parent.Enabled = false
-			if script.Parent.Parent.Enabled == true then
-				script.Parent:Destroy()
-				if script.Parent then
-					script.Parent.Visible = false
-					if script.Parent.Visible == true then
-						print("[Ouxi]: Failed to close")
-					end
-				end
-			end
-		end
-	end)
 
-end;
-task.spawn(C_17);
--- StarterGui.Ouxi.UI.Dragify
-local function C_18()
-local script = G2L["18"];
-	local UserInputService = game:GetService("UserInputService")
-	
-	local gui = script.Parent
-	
-	local dragging
-	local dragInput
-	local dragStart
-	local startPos
-	
-	local function update(input)
-		local delta = input.Position - dragStart
-		gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+for _, effect in ipairs(Lighting:GetChildren()) do
+
+	if effect:IsA("Atmosphere") then
+		saveAtmosphere(effect)
 	end
-	
-	gui.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+
+end
+
+-- Atmospheres adicionados depois
+Lighting.ChildAdded:Connect(function(child)
+
+	if child:IsA("Atmosphere") then
+		saveAtmosphere(child)
+	end
+
+end)
+
+--====================================================
+-- GUI
+--====================================================
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "DebugESP"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+--====================================================
+-- BOTÃO PRINCIPAL
+--====================================================
+
+local openButton = Instance.new("TextButton")
+
+openButton.Name = "OpenButton"
+openButton.Size = UDim2.fromOffset(140, 45)
+openButton.Position = UDim2.new(1, -155, 0, 60)
+
+openButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+openButton.TextColor3 = Color3.new(1, 1, 1)
+
+openButton.Text = "⚡ ESP HUB"
+openButton.Font = Enum.Font.GothamBold
+openButton.TextSize = 14
+
+openButton.Parent = gui
+
+local openCorner = Instance.new("UICorner")
+openCorner.CornerRadius = UDim.new(0, 12)
+openCorner.Parent = openButton
+
+--====================================================
+-- FRAME
+--====================================================
+
+local frame = Instance.new("Frame")
+
+frame.Name = "MainFrame"
+frame.Size = UDim2.fromOffset(240, 250)
+frame.Position = UDim2.new(1, -250, 0, 115)
+
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+frame.Visible = false
+
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 14)
+frameCorner.Parent = frame
+
+local frameStroke = Instance.new("UIStroke")
+
+frameStroke.Color = Color3.fromRGB(0, 170, 255)
+frameStroke.Thickness = 1.5
+
+frameStroke.Parent = frame
+
+local padding = Instance.new("UIPadding")
+
+padding.PaddingTop = UDim.new(0, 12)
+padding.PaddingBottom = UDim.new(0, 12)
+
+padding.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+
+layout.Padding = UDim.new(0, 8)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+layout.Parent = frame
+
+--====================================================
+-- DRAG
+--====================================================
+
+local function makeDraggable(object)
+
+	local dragging = false
+	local dragStart
+	local startPosition
+
+	object.InputBegan:Connect(function(input)
+
+		if input.UserInputType == Enum.UserInputType.Touch
+			or input.UserInputType == Enum.UserInputType.MouseButton1 then
+
 			dragging = true
 			dragStart = input.Position
-			startPos = gui.Position
-	
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-	
-	gui.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-	
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			update(input)
-		end
-	end)
-end;
-task.spawn(C_18);
+			startPosition = object.Position
 
-return G2L["1"], require;
+		end
+
+	end)
+
+	object.InputEnded:Connect(function(input)
+
+		if input.UserInputType == Enum.UserInputType.Touch
+			or input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+			dragging = false
+
+		end
+
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+
+		if not dragging then
+			return
+		end
+
+		if input.UserInputType ~= Enum.UserInputType.Touch
+			and input.UserInputType ~= Enum.UserInputType.MouseMovement then
+
+			return
+
+		end
+
+		local delta = input.Position - dragStart
+
+		object.Position = UDim2.new(
+			startPosition.X.Scale,
+			startPosition.X.Offset + delta.X,
+
+			startPosition.Y.Scale,
+			startPosition.Y.Offset + delta.Y
+		)
+
+	end)
+
+end
+
+makeDraggable(openButton)
+makeDraggable(frame)
+
+--====================================================
+-- BOTÕES
+--====================================================
+
+local function createButton(name, color, callback)
+
+	local button = Instance.new("TextButton")
+
+	button.Size = UDim2.fromOffset(210, 40)
+
+	button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	button.TextColor3 = Color3.new(1, 1, 1)
+
+	button.Text = name .. " : OFF"
+
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 13
+
+	button.Parent = frame
+
+	local corner = Instance.new("UICorner")
+
+	corner.CornerRadius = UDim.new(0, 9)
+	corner.Parent = button
+
+	button.Activated:Connect(function()
+
+		local state = callback()
+
+		if state then
+
+			button.Text = name .. " : ON"
+			button.BackgroundColor3 = color
+
+		else
+
+			button.Text = name .. " : OFF"
+			button.BackgroundColor3 =
+				Color3.fromRGB(35, 35, 35)
+
+		end
+
+	end)
+
+end
+
+--====================================================
+-- ESP INIMIGOS
+--====================================================
+
+createButton(
+	"👹 ESP INIMIGOS",
+	Color3.fromRGB(200, 40, 40),
+
+	function()
+
+		settings.Enemy = not settings.Enemy
+
+		return settings.Enemy
+
+	end
+)
+
+--====================================================
+-- ESP ITENS
+--====================================================
+
+createButton(
+	"📦 ESP ITENS",
+	Color3.fromRGB(0, 120, 255),
+
+	function()
+
+		settings.Item = not settings.Item
+
+		return settings.Item
+
+	end
+)
+
+--====================================================
+-- ESP ARMADILHAS
+--====================================================
+
+createButton(
+	"⚠️ ESP ARMADILHAS",
+	Color3.fromRGB(255, 140, 0),
+
+	function()
+
+		settings.Trap = not settings.Trap
+
+		return settings.Trap
+
+	end
+)
+
+--====================================================
+-- FULLBRIGHT + NOFOG
+--====================================================
+
+createButton(
+	"💡 FULLBRIGHT + NOFOG",
+	Color3.fromRGB(255, 190, 0),
+
+	function()
+
+		settings.Fullbright = not settings.Fullbright
+
+		return settings.Fullbright
+
+	end
+)
+
+--====================================================
+-- ABRIR / FECHAR MENU
+--====================================================
+
+openButton.Activated:Connect(function()
+
+	frame.Visible = not frame.Visible
+
+end)
+
+--====================================================
+-- FULLBRIGHT + NOFOG
+--====================================================
+
+RunService.RenderStepped:Connect(function()
+
+	if settings.Fullbright then
+
+		-- FULLBRIGHT
+
+		Lighting.Brightness = 5
+		Lighting.ClockTime = 14
+
+		Lighting.GlobalShadows = false
+
+		Lighting.Ambient =
+			Color3.new(1, 1, 1)
+
+		Lighting.OutdoorAmbient =
+			Color3.new(1, 1, 1)
+
+		-- NOFOG
+
+		Lighting.FogStart = 0
+		Lighting.FogEnd = 1000000
+
+		-- ATMOSPHERE
+
+		for _, effect in ipairs(Lighting:GetChildren()) do
+
+			if effect:IsA("Atmosphere") then
+
+				effect.Density = 0
+				effect.Haze = 0
+				effect.Glare = 0
+				effect.Offset = 0
+
+			end
+
+		end
+
+	else
+
+		-- RESTAURAR LIGHTING
+
+		Lighting.Brightness =
+			originalLighting.Brightness
+
+		Lighting.ClockTime =
+			originalLighting.ClockTime
+
+		Lighting.FogStart =
+			originalLighting.FogStart
+
+		Lighting.FogEnd =
+			originalLighting.FogEnd
+
+		Lighting.GlobalShadows =
+			originalLighting.GlobalShadows
+
+		Lighting.Ambient =
+			originalLighting.Ambient
+
+		Lighting.OutdoorAmbient =
+			originalLighting.OutdoorAmbient
+
+		-- RESTAURAR ATMOSPHERE
+
+		for effect, values in pairs(atmosphereSettings) do
+
+			if effect and effect.Parent then
+
+				effect.Density =
+					values.Density
+
+				effect.Offset =
+					values.Offset
+
+				effect.Color =
+					values.Color
+
+				effect.Decay =
+					values.Decay
+
+				effect.Glare =
+					values.Glare
+
+				effect.Haze =
+					values.Haze
+
+			end
+
+		end
+
+	end
+
+end)
+
+--====================================================
+-- ENCONTRAR PARTE
+--====================================================
+
+local function getPart(object)
+
+	if object:IsA("BasePart") then
+		return object
+	end
+
+	return object:FindFirstChild(
+		"HumanoidRootPart",
+		true
+	)
+	or object:FindFirstChild(
+		"Head",
+		true
+	)
+	or object:FindFirstChildWhichIsA(
+		"BasePart",
+		true
+	)
+
+end
+
+--====================================================
+-- DISTÂNCIA
+--====================================================
+
+local function isNear(object)
+
+	local character = player.Character
+
+	if not character then
+		return false
+	end
+
+	local root =
+		character:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not root then
+		return false
+	end
+
+	local part = getPart(object)
+
+	if not part then
+		return false
+	end
+
+	return (
+		root.Position - part.Position
+	).Magnitude <= MAX_DISTANCE
+
+end
+
+--====================================================
+-- IDENTIFICAR TIPO
+--====================================================
+
+local function getType(object)
+
+	-- INIMIGO
+
+	if object:FindFirstChildOfClass("Humanoid") then
+		return "Enemy"
+	end
+
+	local name =
+		string.lower(object.Name)
+
+	-- ARMADILHA
+
+	if string.find(name, "trap")
+		or string.find(name, "armadilha")
+		or string.find(name, "spike") then
+
+		return "Trap"
+
+	end
+
+	-- ITEM
+
+	return "Item"
+
+end
+
+--====================================================
+-- FORMATAR VALOR
+--====================================================
+
+local function formatValue(value)
+
+	if value == nil then
+		return nil
+	end
+
+	if typeof(value) == "number" then
+
+		if value % 1 == 0 then
+
+			return tostring(
+				math.floor(value)
+			)
+
+		end
+
+	end
+
+	return tostring(value)
+
+end
+
+--====================================================
+-- ATUALIZAR ITEM
+--====================================================
+
+local function updateItemText(object, label)
+
+	if not object.Parent then
+		return
+	end
+
+	if not label.Parent then
+		return
+	end
+
+	local lines = {}
+
+	-- NOME
+
+	table.insert(
+		lines,
+		object.Name
+	)
+
+	-- SELL VALUE
+
+	local sellValue =
+		object:GetAttribute(
+			"SellValue"
+		)
+
+	-- FUEL VALUE
+
+	local fuelValue =
+		object:GetAttribute(
+			"FuelValue"
+		)
+
+	-- SELL
+
+	if sellValue ~= nil then
+
+		table.insert(
+			lines,
+			"Sell: $" ..
+			formatValue(sellValue)
+		)
+
+	end
+
+	-- FUEL
+
+	if fuelValue ~= nil then
+
+		table.insert(
+			lines,
+			"Fuel: " ..
+			formatValue(fuelValue)
+		)
+
+	end
+
+	label.Text =
+		table.concat(lines, "\n")
+
+end
+
+--====================================================
+-- COR DO OBJETO
+--====================================================
+
+local function getColor(object, objectType)
+
+	if objectType == "Enemy" then
+
+		return Color3.fromRGB(
+			255, 0, 0
+		)
+
+	end
+
+	if objectType == "Trap" then
+
+		return Color3.fromRGB(
+			255, 140, 0
+		)
+
+	end
+
+	-- ITEM
+
+	local sellValue =
+		object:GetAttribute(
+			"SellValue"
+		)
+
+	local fuelValue =
+		object:GetAttribute(
+			"FuelValue"
+		)
+
+	-- SEM SELL E SEM FUEL = ROXO
+
+	if sellValue == nil
+		and fuelValue == nil then
+
+		return Color3.fromRGB(
+			170, 0, 255
+		)
+
+	end
+
+	-- TEM PELO MENOS UM = AZUL
+
+	return Color3.fromRGB(
+		0, 170, 255
+	)
+
+end
+
+--====================================================
+-- CRIAR ESP
+--====================================================
+
+local function createESP(object)
+
+	if tracked[object] then
+		return
+	end
+
+	local objectType =
+		getType(object)
+
+	local part =
+		getPart(object)
+
+	if not part then
+		return
+	end
+
+	local color =
+		getColor(
+			object,
+			objectType
+		)
+
+	--================================================
+	-- HIGHLIGHT
+	--================================================
+
+	local highlight =
+		Instance.new("Highlight")
+
+	highlight.Name =
+		"DebugESPHighlight"
+
+	highlight.Adornee =
+		object
+
+	highlight.FillColor =
+		color
+
+	highlight.FillTransparency =
+		0.5
+
+	highlight.OutlineColor =
+		Color3.new(1, 1, 1)
+
+	highlight.OutlineTransparency =
+		0
+
+	highlight.DepthMode =
+		Enum.HighlightDepthMode.AlwaysOnTop
+
+	highlight.Parent =
+		object
+
+	--================================================
+	-- BILLBOARD
+	--================================================
+
+	local billboard =
+		Instance.new("BillboardGui")
+
+	billboard.Name =
+		"DebugESPText"
+
+	billboard.Adornee =
+		part
+
+	billboard.Size =
+		UDim2.fromOffset(
+			220,
+			80
+		)
+
+	billboard.StudsOffset =
+		Vector3.new(
+			0,
+			3,
+			0
+		)
+
+	billboard.AlwaysOnTop =
+		true
+
+	billboard.MaxDistance =
+		MAX_DISTANCE
+
+	billboard.Parent =
+		gui
+
+	--================================================
+	-- TEXTO
+	--================================================
+
+	local label =
+		Instance.new("TextLabel")
+
+	label.Size =
+		UDim2.fromScale(
+			1,
+			1
+		)
+
+	label.BackgroundTransparency =
+		1
+
+	label.TextColor3 =
+		color
+
+	label.TextStrokeColor3 =
+		Color3.new(0, 0, 0)
+
+	label.TextStrokeTransparency =
+		0.2
+
+	label.Font =
+		Enum.Font.GothamBold
+
+	label.TextSize =
+		14
+
+	label.TextWrapped =
+		true
+
+	label.TextYAlignment =
+		Enum.TextYAlignment.Center
+
+	label.Parent =
+		billboard
+
+	--================================================
+	-- INIMIGO
+	--================================================
+
+	local healthConnection
+
+	if objectType == "Enemy" then
+
+		local humanoid =
+			object:FindFirstChildOfClass(
+				"Humanoid"
+			)
+
+		if humanoid then
+
+			local function updateHealth()
+
+				if label.Parent then
+
+					label.Text =
+						object.Name ..
+						"\nHP: " ..
+						math.floor(
+							humanoid.Health
+						)
+
+				end
+
+			end
+
+			updateHealth()
+
+			healthConnection =
+				humanoid.HealthChanged:Connect(
+					updateHealth
+				)
+
+		else
+
+			label.Text =
+				object.Name
+
+		end
+
+	--================================================
+	-- ITEM
+	--================================================
+
+	elseif objectType == "Item" then
+
+		updateItemText(
+			object,
+			label
+		)
+
+	--================================================
+	-- TRAP
+	--================================================
+
+	else
+
+		label.Text =
+			object.Name
+
+	end
+
+	--================================================
+	-- ATUALIZAÇÃO DOS ATTRIBUTES
+	--================================================
+
+	local sellConnection
+	local fuelConnection
+
+	if objectType == "Item" then
+
+		sellConnection =
+			object:GetAttributeChangedSignal(
+				"SellValue"
+			):Connect(function()
+
+				updateItemText(
+					object,
+					label
+				)
+
+			end)
+
+		fuelConnection =
+			object:GetAttributeChangedSignal(
+				"FuelValue"
+			):Connect(function()
+
+				updateItemText(
+					object,
+					label
+				)
+
+			end)
+
+	end
+
+	--================================================
+	-- SALVAR
+	--================================================
+
+	tracked[object] = {
+
+		highlight = highlight,
+
+		billboard = billboard,
+
+		label = label,
+
+		healthConnection =
+			healthConnection,
+
+		sellConnection =
+			sellConnection,
+
+		fuelConnection =
+			fuelConnection
+
+	}
+
+end
+
+--====================================================
+-- REMOVER ESP
+--====================================================
+
+local function removeESP(object)
+
+	local data =
+		tracked[object]
+
+	if not data then
+		return
+	end
+
+	if data.healthConnection then
+
+		data.healthConnection:Disconnect()
+
+	end
+
+	if data.sellConnection then
+
+		data.sellConnection:Disconnect()
+
+	end
+
+	if data.fuelConnection then
+
+		data.fuelConnection:Disconnect()
+
+	end
+
+	if data.highlight then
+
+		data.highlight:Destroy()
+
+	end
+
+	if data.billboard then
+
+		data.billboard:Destroy()
+
+	end
+
+	tracked[object] = nil
+
+end
+
+--====================================================
+-- LOOP ESP
+--====================================================
+
+RunService.Heartbeat:Connect(function()
+
+	for _, object in ipairs(
+		debrisFolder:GetChildren()
+	) do
+
+		local objectType =
+			getType(object)
+
+		if settings[objectType]
+			and isNear(object) then
+
+			-- Se for item, atualizar a cor
+			-- caso os Attributes tenham mudado.
+
+			if tracked[object]
+				and objectType == "Item" then
+
+				local data =
+					tracked[object]
+
+				local newColor =
+					getColor(
+						object,
+						objectType
+					)
+
+				if data.highlight then
+
+					data.highlight.FillColor =
+						newColor
+
+				end
+
+				if data.label then
+
+					data.label.TextColor3 =
+						newColor
+
+				end
+
+			end
+
+			createESP(object)
+
+		else
+
+			removeESP(object)
+
+		end
+
+	end
+
+	-- LIMPAR OBJETOS REMOVIDOS
+
+	for object in pairs(tracked) do
+
+		if not object.Parent then
+
+			removeESP(object)
+
+		end
+
+	end
+
+end)
+
+--====================================================
+-- FIM
+--====================================================
