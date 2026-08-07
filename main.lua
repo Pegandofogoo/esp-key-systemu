@@ -1,5 +1,5 @@
 --====================================================
--- ESP DEBUG - PRÓPRIO JOGO
+-- ESP DEBUG HUB
 -- LocalScript
 -- StarterPlayer > StarterPlayerScripts
 --====================================================
@@ -10,7 +10,9 @@ local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
+
 local debrisFolder = workspace:WaitForChild("Debris")
+local itemsDroppedFolder = workspace:WaitForChild("ItemsDropped")
 
 --====================================================
 -- CONFIG
@@ -22,13 +24,14 @@ local settings = {
 	Enemy = false,
 	Item = false,
 	Trap = false,
+	Dropped = false,
 	Fullbright = false
 }
 
 local tracked = {}
 
 --====================================================
--- SALVAR LIGHTING ORIGINAL
+-- LIGHTING ORIGINAL
 --====================================================
 
 local originalLighting = {
@@ -42,7 +45,7 @@ local originalLighting = {
 }
 
 --====================================================
--- SALVAR ATMOSPHERE ORIGINAL
+-- ATMOSPHERE ORIGINAL
 --====================================================
 
 local atmosphereSettings = {}
@@ -64,19 +67,16 @@ local function saveAtmosphere(atmosphere)
 
 end
 
-for _, effect in ipairs(Lighting:GetChildren()) do
-
-	if effect:IsA("Atmosphere") then
-		saveAtmosphere(effect)
+for _, object in ipairs(Lighting:GetChildren()) do
+	if object:IsA("Atmosphere") then
+		saveAtmosphere(object)
 	end
-
 end
 
--- Atmospheres adicionados depois
-Lighting.ChildAdded:Connect(function(child)
+Lighting.ChildAdded:Connect(function(object)
 
-	if child:IsA("Atmosphere") then
-		saveAtmosphere(child)
+	if object:IsA("Atmosphere") then
+		saveAtmosphere(object)
 	end
 
 end)
@@ -97,31 +97,33 @@ gui.Parent = player:WaitForChild("PlayerGui")
 local openButton = Instance.new("TextButton")
 
 openButton.Name = "OpenButton"
-openButton.Size = UDim2.fromOffset(140, 45)
-openButton.Position = UDim2.new(1, -155, 0, 60)
+openButton.Size = UDim2.fromOffset(125, 38)
+openButton.Position = UDim2.new(1, -140, 0, 55)
 
 openButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 openButton.TextColor3 = Color3.new(1, 1, 1)
-
 openButton.Text = "⚡ ESP HUB"
 openButton.Font = Enum.Font.GothamBold
-openButton.TextSize = 14
+openButton.TextSize = 12
 
 openButton.Parent = gui
 
 local openCorner = Instance.new("UICorner")
-openCorner.CornerRadius = UDim.new(0, 12)
+openCorner.CornerRadius = UDim.new(0, 10)
 openCorner.Parent = openButton
 
 --====================================================
--- FRAME
+-- PAINEL COMPACTO
 --====================================================
 
 local frame = Instance.new("Frame")
 
 frame.Name = "MainFrame"
-frame.Size = UDim2.fromOffset(240, 250)
-frame.Position = UDim2.new(1, -250, 0, 115)
+
+-- PAINEL MENOR
+frame.Size = UDim2.fromOffset(200, 245)
+
+frame.Position = UDim2.new(1, -210, 0, 100)
 
 frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 frame.Visible = false
@@ -129,26 +131,26 @@ frame.Visible = false
 frame.Parent = gui
 
 local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 14)
+frameCorner.CornerRadius = UDim.new(0, 12)
 frameCorner.Parent = frame
 
 local frameStroke = Instance.new("UIStroke")
-
 frameStroke.Color = Color3.fromRGB(0, 170, 255)
-frameStroke.Thickness = 1.5
-
+frameStroke.Thickness = 1.2
 frameStroke.Parent = frame
 
 local padding = Instance.new("UIPadding")
 
-padding.PaddingTop = UDim.new(0, 12)
-padding.PaddingBottom = UDim.new(0, 12)
+padding.PaddingTop = UDim.new(0, 8)
+padding.PaddingBottom = UDim.new(0, 8)
 
 padding.Parent = frame
 
 local layout = Instance.new("UIListLayout")
 
-layout.Padding = UDim.new(0, 8)
+-- ESPAÇAMENTO MENOR
+layout.Padding = UDim.new(0, 5)
+
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 layout.VerticalAlignment = Enum.VerticalAlignment.Top
 
@@ -226,21 +228,28 @@ local function createButton(name, color, callback)
 
 	local button = Instance.new("TextButton")
 
-	button.Size = UDim2.fromOffset(210, 40)
+	-- BOTÃO MENOR
+	button.Size = UDim2.fromOffset(175, 32)
 
-	button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-	button.TextColor3 = Color3.new(1, 1, 1)
+	button.BackgroundColor3 =
+		Color3.fromRGB(35, 35, 35)
 
-	button.Text = name .. " : OFF"
+	button.TextColor3 =
+		Color3.new(1, 1, 1)
 
-	button.Font = Enum.Font.GothamBold
-	button.TextSize = 13
+	button.Text =
+		name .. " : OFF"
+
+	button.Font =
+		Enum.Font.GothamBold
+
+	-- FONTE MENOR
+	button.TextSize = 11
 
 	button.Parent = frame
 
 	local corner = Instance.new("UICorner")
-
-	corner.CornerRadius = UDim.new(0, 9)
+	corner.CornerRadius = UDim.new(0, 8)
 	corner.Parent = button
 
 	button.Activated:Connect(function()
@@ -249,18 +258,25 @@ local function createButton(name, color, callback)
 
 		if state then
 
-			button.Text = name .. " : ON"
-			button.BackgroundColor3 = color
+			button.Text =
+				name .. " : ON"
+
+			button.BackgroundColor3 =
+				color
 
 		else
 
-			button.Text = name .. " : OFF"
+			button.Text =
+				name .. " : OFF"
+
 			button.BackgroundColor3 =
 				Color3.fromRGB(35, 35, 35)
 
 		end
 
 	end)
+
+	return button
 
 end
 
@@ -274,7 +290,8 @@ createButton(
 
 	function()
 
-		settings.Enemy = not settings.Enemy
+		settings.Enemy =
+			not settings.Enemy
 
 		return settings.Enemy
 
@@ -291,7 +308,8 @@ createButton(
 
 	function()
 
-		settings.Item = not settings.Item
+		settings.Item =
+			not settings.Item
 
 		return settings.Item
 
@@ -308,9 +326,57 @@ createButton(
 
 	function()
 
-		settings.Trap = not settings.Trap
+		settings.Trap =
+			not settings.Trap
 
 		return settings.Trap
+
+	end
+)
+
+--====================================================
+-- ESP DROPPED
+--====================================================
+
+createButton(
+	"📦 ESP DROPPED",
+	Color3.fromRGB(150, 80, 255),
+
+	function()
+
+		settings.Dropped =
+			not settings.Dropped
+
+		return settings.Dropped
+
+	end
+)
+
+--====================================================
+-- LIMPAR DROPPED
+--====================================================
+
+createButton(
+	"🧹 LIMPAR DROPPED",
+	Color3.fromRGB(100, 60, 150),
+
+	function()
+
+		for object in pairs(tracked) do
+
+			if object:IsDescendantOf(
+				itemsDroppedFolder
+			) then
+
+				removeESP(object)
+
+			end
+
+		end
+
+		settings.Dropped = false
+
+		return false
 
 	end
 )
@@ -325,7 +391,8 @@ createButton(
 
 	function()
 
-		settings.Fullbright = not settings.Fullbright
+		settings.Fullbright =
+			not settings.Fullbright
 
 		return settings.Fullbright
 
@@ -333,12 +400,13 @@ createButton(
 )
 
 --====================================================
--- ABRIR / FECHAR MENU
+-- ABRIR / FECHAR
 --====================================================
 
 openButton.Activated:Connect(function()
 
-	frame.Visible = not frame.Visible
+	frame.Visible =
+		not frame.Visible
 
 end)
 
@@ -349,8 +417,6 @@ end)
 RunService.RenderStepped:Connect(function()
 
 	if settings.Fullbright then
-
-		-- FULLBRIGHT
 
 		Lighting.Brightness = 5
 		Lighting.ClockTime = 14
@@ -363,14 +429,12 @@ RunService.RenderStepped:Connect(function()
 		Lighting.OutdoorAmbient =
 			Color3.new(1, 1, 1)
 
-		-- NOFOG
-
 		Lighting.FogStart = 0
 		Lighting.FogEnd = 1000000
 
-		-- ATMOSPHERE
-
-		for _, effect in ipairs(Lighting:GetChildren()) do
+		for _, effect in ipairs(
+			Lighting:GetChildren()
+		) do
 
 			if effect:IsA("Atmosphere") then
 
@@ -384,8 +448,6 @@ RunService.RenderStepped:Connect(function()
 		end
 
 	else
-
-		-- RESTAURAR LIGHTING
 
 		Lighting.Brightness =
 			originalLighting.Brightness
@@ -408,9 +470,9 @@ RunService.RenderStepped:Connect(function()
 		Lighting.OutdoorAmbient =
 			originalLighting.OutdoorAmbient
 
-		-- RESTAURAR ATMOSPHERE
-
-		for effect, values in pairs(atmosphereSettings) do
+		for effect, values in pairs(
+			atmosphereSettings
+		) do
 
 			if effect and effect.Parent then
 
@@ -471,7 +533,8 @@ end
 
 local function isNear(object)
 
-	local character = player.Character
+	local character =
+		player.Character
 
 	if not character then
 		return false
@@ -486,7 +549,8 @@ local function isNear(object)
 		return false
 	end
 
-	local part = getPart(object)
+	local part =
+		getPart(object)
 
 	if not part then
 		return false
@@ -499,31 +563,38 @@ local function isNear(object)
 end
 
 --====================================================
--- IDENTIFICAR TIPO
+-- TIPO
 --====================================================
 
 local function getType(object)
 
-	-- INIMIGO
+	if object:FindFirstChildOfClass(
+		"Humanoid"
+	) then
 
-	if object:FindFirstChildOfClass("Humanoid") then
 		return "Enemy"
+
 	end
 
 	local name =
 		string.lower(object.Name)
 
-	-- ARMADILHA
-
-	if string.find(name, "trap")
-		or string.find(name, "armadilha")
-		or string.find(name, "spike") then
+	if string.find(
+		name,
+		"trap"
+	)
+	or string.find(
+		name,
+		"armadilha"
+	)
+	or string.find(
+		name,
+		"spike"
+	) then
 
 		return "Trap"
 
 	end
-
-	-- ITEM
 
 	return "Item"
 
@@ -556,81 +627,85 @@ local function formatValue(value)
 end
 
 --====================================================
--- ATUALIZAR ITEM
+-- TEXTO DO ITEM
 --====================================================
 
-local function updateItemText(object, label)
+local function updateItemText(
+	object,
+	label
+)
 
-	if not object.Parent then
-		return
-	end
+	if not object.Parent
+		or not label.Parent then
 
-	if not label.Parent then
 		return
+
 	end
 
 	local lines = {}
-
-	-- NOME
 
 	table.insert(
 		lines,
 		object.Name
 	)
 
-	-- SELL VALUE
-
 	local sellValue =
 		object:GetAttribute(
 			"SellValue"
 		)
-
-	-- FUEL VALUE
 
 	local fuelValue =
 		object:GetAttribute(
 			"FuelValue"
 		)
 
-	-- SELL
-
 	if sellValue ~= nil then
 
 		table.insert(
 			lines,
 			"Sell: $" ..
-			formatValue(sellValue)
+			formatValue(
+				sellValue
+			)
 		)
 
 	end
-
-	-- FUEL
 
 	if fuelValue ~= nil then
 
 		table.insert(
 			lines,
 			"Fuel: " ..
-			formatValue(fuelValue)
+			formatValue(
+				fuelValue
+			)
 		)
 
 	end
 
 	label.Text =
-		table.concat(lines, "\n")
+		table.concat(
+			lines,
+			"\n"
+		)
 
 end
 
 --====================================================
--- COR DO OBJETO
+-- COR
 --====================================================
 
-local function getColor(object, objectType)
+local function getColor(
+	object,
+	objectType
+)
 
 	if objectType == "Enemy" then
 
 		return Color3.fromRGB(
-			255, 0, 0
+			255,
+			0,
+			0
 		)
 
 	end
@@ -638,12 +713,12 @@ local function getColor(object, objectType)
 	if objectType == "Trap" then
 
 		return Color3.fromRGB(
-			255, 140, 0
+			255,
+			140,
+			0
 		)
 
 	end
-
-	-- ITEM
 
 	local sellValue =
 		object:GetAttribute(
@@ -655,21 +730,27 @@ local function getColor(object, objectType)
 			"FuelValue"
 		)
 
-	-- SEM SELL E SEM FUEL = ROXO
+	-- SEM SELL E SEM FUEL
+	-- = ROXO
 
 	if sellValue == nil
 		and fuelValue == nil then
 
 		return Color3.fromRGB(
-			170, 0, 255
+			170,
+			0,
+			255
 		)
 
 	end
 
-	-- TEM PELO MENOS UM = AZUL
+	-- COM SELL OU FUEL
+	-- = AZUL
 
 	return Color3.fromRGB(
-		0, 170, 255
+		0,
+		170,
+		255
 	)
 
 end
@@ -700,9 +781,7 @@ local function createESP(object)
 			objectType
 		)
 
-	--================================================
 	-- HIGHLIGHT
-	--================================================
 
 	local highlight =
 		Instance.new("Highlight")
@@ -720,7 +799,11 @@ local function createESP(object)
 		0.5
 
 	highlight.OutlineColor =
-		Color3.new(1, 1, 1)
+		Color3.new(
+			1,
+			1,
+			1
+		)
 
 	highlight.OutlineTransparency =
 		0
@@ -731,9 +814,7 @@ local function createESP(object)
 	highlight.Parent =
 		object
 
-	--================================================
 	-- BILLBOARD
-	--================================================
 
 	local billboard =
 		Instance.new("BillboardGui")
@@ -766,9 +847,7 @@ local function createESP(object)
 	billboard.Parent =
 		gui
 
-	--================================================
-	-- TEXTO
-	--================================================
+	-- LABEL
 
 	local label =
 		Instance.new("TextLabel")
@@ -786,7 +865,11 @@ local function createESP(object)
 		color
 
 	label.TextStrokeColor3 =
-		Color3.new(0, 0, 0)
+		Color3.new(
+			0,
+			0,
+			0
+		)
 
 	label.TextStrokeTransparency =
 		0.2
@@ -806,9 +889,7 @@ local function createESP(object)
 	label.Parent =
 		billboard
 
-	--================================================
 	-- INIMIGO
-	--================================================
 
 	local healthConnection
 
@@ -850,31 +931,18 @@ local function createESP(object)
 
 		end
 
-	--================================================
-	-- ITEM
-	--================================================
+	else
 
-	elseif objectType == "Item" then
+		-- ITEM / DROPPED
 
 		updateItemText(
 			object,
 			label
 		)
 
-	--================================================
-	-- TRAP
-	--================================================
-
-	else
-
-		label.Text =
-			object.Name
-
 	end
 
-	--================================================
-	-- ATUALIZAÇÃO DOS ATTRIBUTES
-	--================================================
+	-- ATTRIBUTES
 
 	local sellConnection
 	local fuelConnection
@@ -907,16 +975,10 @@ local function createESP(object)
 
 	end
 
-	--================================================
-	-- SALVAR
-	--================================================
-
 	tracked[object] = {
 
 		highlight = highlight,
-
 		billboard = billboard,
-
 		label = label,
 
 		healthConnection =
@@ -936,7 +998,7 @@ end
 -- REMOVER ESP
 --====================================================
 
-local function removeESP(object)
+function removeESP(object)
 
 	local data =
 		tracked[object]
@@ -946,33 +1008,23 @@ local function removeESP(object)
 	end
 
 	if data.healthConnection then
-
 		data.healthConnection:Disconnect()
-
 	end
 
 	if data.sellConnection then
-
 		data.sellConnection:Disconnect()
-
 	end
 
 	if data.fuelConnection then
-
 		data.fuelConnection:Disconnect()
-
 	end
 
 	if data.highlight then
-
 		data.highlight:Destroy()
-
 	end
 
 	if data.billboard then
-
 		data.billboard:Destroy()
-
 	end
 
 	tracked[object] = nil
@@ -980,10 +1032,57 @@ local function removeESP(object)
 end
 
 --====================================================
--- LOOP ESP
+-- ATUALIZAR ESP
 --====================================================
 
-RunService.Heartbeat:Connect(function()
+local function updateExistingESP(object)
+
+	local data =
+		tracked[object]
+
+	if not data then
+		return
+	end
+
+	local objectType =
+		getType(object)
+
+	local newColor =
+		getColor(
+			object,
+			objectType
+		)
+
+	if data.highlight then
+
+		data.highlight.FillColor =
+			newColor
+
+	end
+
+	if data.label then
+
+		data.label.TextColor3 =
+			newColor
+
+	end
+
+	if objectType == "Item" then
+
+		updateItemText(
+			object,
+			data.label
+		)
+
+	end
+
+end
+
+--====================================================
+-- DEBRIS
+--====================================================
+
+local function processDebris()
 
 	for _, object in ipairs(
 		debrisFolder:GetChildren()
@@ -995,38 +1094,8 @@ RunService.Heartbeat:Connect(function()
 		if settings[objectType]
 			and isNear(object) then
 
-			-- Se for item, atualizar a cor
-			-- caso os Attributes tenham mudado.
-
-			if tracked[object]
-				and objectType == "Item" then
-
-				local data =
-					tracked[object]
-
-				local newColor =
-					getColor(
-						object,
-						objectType
-					)
-
-				if data.highlight then
-
-					data.highlight.FillColor =
-						newColor
-
-				end
-
-				if data.label then
-
-					data.label.TextColor3 =
-						newColor
-
-				end
-
-			end
-
 			createESP(object)
+			updateExistingESP(object)
 
 		else
 
@@ -1036,14 +1105,48 @@ RunService.Heartbeat:Connect(function()
 
 	end
 
-	-- LIMPAR OBJETOS REMOVIDOS
+end
+
+--====================================================
+-- ITEMS DROPPED
+--====================================================
+
+local function processDropped()
+
+	for _, object in ipairs(
+		itemsDroppedFolder:GetChildren()
+	) do
+
+		if settings.Dropped
+			and isNear(object) then
+
+			createESP(object)
+			updateExistingESP(object)
+
+		else
+
+			removeESP(object)
+
+		end
+
+	end
+
+end
+
+--====================================================
+-- LOOP
+--====================================================
+
+RunService.Heartbeat:Connect(function()
+
+	processDebris()
+
+	processDropped()
 
 	for object in pairs(tracked) do
 
 		if not object.Parent then
-
 			removeESP(object)
-
 		end
 
 	end
